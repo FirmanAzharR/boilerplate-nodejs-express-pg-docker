@@ -1,0 +1,32 @@
+# tahapan
+stages:
+    - build_image_dev
+    - deploy_dev
+
+# build image on development server
+build_image:
+    stage: build_image_dev
+    script: 
+        - docker build -t 192.168.62.220:5000/$PROJECT_NAME:$CI_COMMIT_SHORT_SHA .
+        - docker push 192.168.62.220:5000/$PROJECT_NAME:$CI_COMMIT_SHORT_SHA
+    environment:     
+    only:
+        - develop
+    when: manual
+    tags:        
+        - runner-1-sims-psm
+
+# deploy to development server
+deploy_development:
+    stage: deploy_dev
+    script:
+        - export KUBECONFIG=/home/gitlab-runner/kubeconfig.yaml
+        - if [[ ! -f ""/etc/nginx/sites-available/""$PROJECT_DOMAIN_NAME ]]; then cd ""/etc/nginx/sites-available/"" && cp reverse-proxy.template $PROJECT_DOMAIN_NAME && sed -i -e 's/CONFDOMAIN/'$PROJECT_DOMAIN_NAME'/g' $PROJECT_DOMAIN_NAME && sed -i -e 's/CONFPORT/'$PROJECT_PORT'/g' $PROJECT_DOMAIN_NAME && ln -s ""/etc/nginx/sites-available/""$PROJECT_DOMAIN_NAME ""/etc/nginx/sites-enabled/"" ; else cd ""/etc/nginx/sites-available/"" && sed -i -e 's/CONFDOMAIN/'$PROJECT_DOMAIN_NAME'/g' $PROJECT_DOMAIN_NAME && sed -i -e 's/CONFPORT/'$PROJECT_PORT'/g' $PROJECT_DOMAIN_NAME; fi
+        - if [[ ! -f ""/home/gitlab-runner/kubernetes-config/""$PROJECT_NAME"".yaml"" ]]; then cd ""/home/gitlab-runner/kubernetes-config/"" && cp $CI_PROJECT_DIR""/kubernetes.yaml.template"" $PROJECT_NAME"".yaml"" && sed -i -e 's/PROJECT_NAME/'$PROJECT_NAME'/g' $PROJECT_NAME"".yaml"" && sed -i -e 's/SERVICE_PORT/'$PROJECT_PORT'/g' $PROJECT_NAME"".yaml"" && sed -i -e 's/CONTAINER_PORT/'$PROJECT_PORT'/g' $PROJECT_NAME"".yaml"" && sed -i -e 's/TARGET_PORT/'$PROJECT_PORT'/g' $PROJECT_NAME"".yaml"" && sed -i -e 's/VERSION/'$CI_COMMIT_SHORT_SHA'/g' $PROJECT_NAME"".yaml""; else cd ""/home/gitlab-runner/kubernetes-config/"" && rm -rf $PROJECT_NAME"".yaml"" && cp $CI_PROJECT_DIR""/kubernetes.yaml.template"" $PROJECT_NAME"".yaml"" && sed -i -e 's/PROJECT_NAME/'$PROJECT_NAME'/g' $PROJECT_NAME"".yaml"" && sed -i -e 's/SERVICE_PORT/'$PROJECT_PORT'/g' $PROJECT_NAME"".yaml"" && sed -i -e 's/CONTAINER_PORT/'$PROJECT_PORT'/g' $PROJECT_NAME"".yaml"" && sed -i -e 's/TARGET_PORT/'$PROJECT_PORT'/g' $PROJECT_NAME"".yaml"" && sed -i -e 's/VERSION/'$CI_COMMIT_SHORT_SHA'/g' $PROJECT_NAME"".yaml""; fi
+        - kubectl apply -f ""/home/gitlab-runner/kubernetes-config/""$PROJECT_NAME"".yaml""
+    environment:
+    only:
+        - develop
+    when: manual
+    tags: 
+        - runner-1-sims-psm
