@@ -1,7 +1,7 @@
 docker compose
 buat file docker-compose.yml
 membuild image dengan docker compose = docker-compose build
-menjalankan image-container dengan docker compose = docker-compose up
+menjalankan image-container dengan docker compose = docker-compose up -d
 
 
 manual
