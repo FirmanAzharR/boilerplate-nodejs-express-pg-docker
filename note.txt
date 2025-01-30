@@ -1,4 +1,5 @@
 docker compose
+buat file docker-compose.yml
 membuild image dengan docker compose = docker-compose build
 menjalankan image-container dengan docker compose = docker-compose up
 
@@ -32,3 +33,9 @@ CREATE TABLE public.users (
 	CONSTRAINT users_pk PRIMARY KEY (id)
 ); -> create table
 
+
+push ke docker hub
+docker login
+docker-compose build # pastikan docker-compose.yml ditambah  ' image: username-dockercompose/node-upload-nama-image-anda ' # Tambahkan username Docker Hub
+docker images -> cek image
+docker-compose push

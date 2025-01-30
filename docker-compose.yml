@@ -16,6 +16,7 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   app:
+    image: firmanazharriyadi/node-upload  # Tambahkan username Docker Hub #jika tidak ada docker hub tidak usah ditambahkan
     build: .
     container_name: node_app
     restart: always
